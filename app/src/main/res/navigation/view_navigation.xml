@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/view_navigation"
+    app:startDestination="@+id/view_navigation_loading">
+
+    <fragment
+        android:id="@+id/view_navigation_loading"
+        android:name="com.pigeonligh.facade.ui.view.loading.ViewLoadingFragment"
+        android:label="Loading"
+        tools:layout="@layout/fragment_view_loading" />
+
+    <fragment
+        android:id="@+id/view_navigation_loaded_index"
+        android:name="com.pigeonligh.facade.ui.view.index.ViewIndexFragment"
+        android:label="Index"
+        tools:layout="@layout/fragment_view_index" />
+
+    <fragment
+        android:id="@+id/view_navigation_loaded_content"
+        android:name="com.pigeonligh.facade.ui.view.content.ViewContentFragment"
+        android:label="Content"
+        tools:layout="@layout/fragment_view_content" />
+
+    <fragment
+        android:id="@+id/view_navigation_failed"
+        android:name="com.pigeonligh.facade.ui.view.failed.ViewFailedFragment"
+        android:label="Failed"
+        tools:layout="@layout/fragment_view_failed" />
+
+</navigation>
