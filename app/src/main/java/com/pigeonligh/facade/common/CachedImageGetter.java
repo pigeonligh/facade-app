@@ -63,7 +63,7 @@ public class CachedImageGetter {
 
     public ImageCache get(String url) {
         String key = Utils.hashImageURL(url);
-        String cached = ""; // CacheUtil.get(key);
+        String cached = CacheUtil.get(key);
 
         ImageCache cache;
         if (cached == null || cached.isEmpty()) {
