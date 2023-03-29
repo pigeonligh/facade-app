@@ -53,4 +53,12 @@ public class Utils {
     public static Gson gson() {
         return gsonInstance;
     }
+
+    public static String hashPath(String url, String path) {
+        return String.format("PATH::%s::%s", url, path);
+    }
+
+    public static String hashImageURL(String url) {
+        return String.format("IMAGE::%s", url);
+    }
 }

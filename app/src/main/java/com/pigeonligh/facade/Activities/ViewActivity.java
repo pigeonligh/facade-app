@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -16,6 +19,8 @@ import androidx.navigation.Navigation;
 import com.haohaohu.cachemanage.CacheUtil;
 import com.pigeonligh.facade.R;
 import com.pigeonligh.facade.common.Utils;
+import com.pigeonligh.facade.data.store.DataStore;
+import com.pigeonligh.facade.data.types.DataFavoriteItem;
 import com.pigeonligh.facade.data.types.ResponseView;
 import com.pigeonligh.facade.databinding.ActivityViewBinding;
 
@@ -32,19 +37,22 @@ public class ViewActivity extends AppCompatActivity {
     public static final String URL_ID = "url_id";
     public static final String PATH_ID = "path_id";
     public static final String MODE_ID = "mode_id";
+
     private static final int FLING_MIN_DISTANCE = 200;
+
     private final Stack<ViewState> views = new Stack<>();
     private ViewMode initViewMode = ViewMode.auto;
     private Param param;
-    private State state = State.loading;
     private ActivityViewBinding binding;
     private NavController navController;
     private boolean inited = false;
 
     private GestureDetector gestureListener;
-
     private Retrofit retrofit;
     private ResponseView.Service service;
+
+    private Boolean favoriteMenuVisible;
+    private Boolean unfavoriteMenuVisible;
 
 
     public static Intent getIndentForLaunch(Context context, Param param) {
@@ -90,14 +98,59 @@ public class ViewActivity extends AppCompatActivity {
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.view_menu, menu);
+
+        menu.findItem(R.id.view_menu_favorite).setVisible(favoriteMenuVisible);
+        menu.findItem(R.id.view_menu_unfavorite).setVisible(unfavoriteMenuVisible);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        ViewState current;
+        switch (item.getItemId()) {
+            case R.id.view_menu_refresh:
+                this.refresh();
+                return true;
+            case R.id.view_menu_favorite:
+                current = getCurrentView();
+                DataFavoriteItem favoriteItem = new DataFavoriteItem(current.data.content.title, param.url, current.path);
+                if (DataStore.getFavoriteStore().getList().addItem(favoriteItem)) {
+                    DataStore.getFavoriteStore().saveData();
+                }
+                updateMenu();
+                return true;
+
+            case R.id.view_menu_unfavorite:
+                current = getCurrentView();
+                int favoriteId = DataStore.getFavoriteStore().findFavorite(param.url, current.path);
+                if (favoriteId != -1) {
+                    DataStore.getFavoriteStore().getList().remove(favoriteId);
+                }
+                updateMenu();
+                return true;
+
+            case R.id.view_menu_settings:
+                // TODO: settings
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     public void fetchData(String path, ViewMode baseMode) {
-        String cacheKey = param.url + path;
+        String cacheKey = Utils.hashPath(param.url, path);
+        views.push(new ViewState());
+        updateView();
 
         String cached = CacheUtil.get(cacheKey);
-        ViewCallback callback = new ViewCallback(baseMode, false, cacheKey);
+        ViewCallback callback = new ViewCallback(path, baseMode, cacheKey);
         if (cached.isEmpty()) {
             Call<ResponseView> respCall = service.get(path);
             respCall.enqueue(callback);
@@ -106,26 +159,53 @@ public class ViewActivity extends AppCompatActivity {
         }
     }
 
-    public void fresh(String path, ViewMode baseMode) {
-        String cacheKey = param.url + path;
-        ViewCallback callback = new ViewCallback(baseMode, true, cacheKey);
+    public void refresh() {
+        String path = getCurrentView().getPath();
+        ViewMode baseMode = getCurrentView().getMode();
+
+        ViewCallback callback = new ViewCallback(path, baseMode, Utils.hashPath(param.url, path));
         Call<ResponseView> respCall = service.get(path);
         respCall.enqueue(callback);
     }
 
     public void popView() {
-        if (views.size() == 1) {
-            finish();
-            return;
+        if (views.size() != 0) {
+            views.pop();
         }
-        views.pop();
-        state = State.loaded;
 
-        updateView();
+        if (views.size() == 0) {
+            finish();
+        } else {
+            updateView();
+        }
+    }
+
+    private void updateMenu() {
+        State currentState = getCurrentView().getState();
+        String currentPath = getCurrentView().getPath();
+
+        favoriteMenuVisible = false;
+        unfavoriteMenuVisible = false;
+
+        if (currentState == State.loaded) {
+            int favoriteId = DataStore.getFavoriteStore().findFavorite(param.url, currentPath);
+            if (favoriteId == -1) {
+                favoriteMenuVisible = true;
+            } else {
+                unfavoriteMenuVisible = true;
+            }
+        }
+
+        invalidateOptionsMenu();
     }
 
     private void updateView() {
-        switch (state) {
+        ViewState current = getCurrentView();
+        if (current == null) {
+            return;
+        }
+
+        switch (current.getState()) {
             case loading:
                 navController.navigate(R.id.view_navigation_loading);
                 Log.d("view", "updateNav: loading");
@@ -135,14 +215,13 @@ public class ViewActivity extends AppCompatActivity {
                 Log.d("view", "updateNav: failed");
                 break;
             case loaded:
-                switch (getCurrentView().mode) {
+                switch (current.getMode()) {
                     case index:
                         navController.navigate(R.id.view_navigation_loaded_index);
                         Log.d("view", "updateNav: index");
                         break;
                     case content:
-                        // TODO: change to view_navigation_loaded_content
-                        navController.navigate(R.id.view_navigation_loaded_index);
+                        navController.navigate(R.id.view_navigation_loaded_content);
                         Log.d("view", "updateNav: content");
                         break;
                     case auto:
@@ -151,6 +230,7 @@ public class ViewActivity extends AppCompatActivity {
                         break;
                 }
         }
+        updateMenu();
     }
 
     @Override
@@ -173,6 +253,14 @@ public class ViewActivity extends AppCompatActivity {
         }
 
         super.onResume();
+    }
+
+    public String getMediaURL(String path) {
+        String url = param.url;
+        if (url.charAt(url.length() - 1) != '/') {
+            url = url + '/';
+        }
+        return url + "media?path=" + path;
     }
 
     public enum State {
@@ -231,31 +319,48 @@ public class ViewActivity extends AppCompatActivity {
     }
 
     public class ViewState {
-        private final ResponseView data;
-        private final ViewMode mode;
+        private ResponseView data = null;
+        private ViewMode mode = ViewMode.auto;
+        private State state = State.loading;
+        private String path;
 
-        ViewState(ResponseView data, ViewMode mode) {
+        ViewState() {
+        }
+
+        public void set(String path, ResponseView data, ViewMode mode, State state) {
+            this.path = path;
             this.data = data;
             this.mode = mode;
+            this.state = state;
         }
 
         public ResponseView getData() {
             return data;
         }
 
+
         public ViewMode getMode() {
             return mode;
         }
+
+        public String getPath() {
+            return path;
+        }
+
+        public State getState() {
+            return state;
+        }
+
     }
 
     private class ViewCallback implements Callback<ResponseView> {
+        private final String path;
         private final ViewMode baseMode;
-        private final boolean isRefresh;
         private final String cacheKey;
 
-        ViewCallback(ViewMode baseMode, boolean isRefresh, String cacheKey) {
+        ViewCallback(String path, ViewMode baseMode, String cacheKey) {
+            this.path = path;
             this.baseMode = baseMode;
-            this.isRefresh = isRefresh;
             this.cacheKey = cacheKey;
         }
 
@@ -277,13 +382,8 @@ public class ViewActivity extends AppCompatActivity {
                 suggest = ViewMode.index;
             }
             viewMode = viewMode.merge(suggest);
-            
-            if (isRefresh) {
-                views.pop();
-            }
-            views.push(new ViewState(data, viewMode));
 
-            state = State.loaded;
+            getCurrentView().set(path, data, viewMode, State.loaded);
             updateView();
         }
 
@@ -297,7 +397,8 @@ public class ViewActivity extends AppCompatActivity {
                 CacheUtil.put(cacheKey, Utils.gson().toJson(data));
             } else {
                 Log.d("view", String.format("code: %d", response.code()));
-                state = State.failed;
+
+                getCurrentView().set(path, null, ViewMode.auto, State.failed);
                 updateView();
             }
         }
@@ -305,7 +406,8 @@ public class ViewActivity extends AppCompatActivity {
         @Override
         public void onFailure(Call<ResponseView> call, Throwable t) {
             Log.d("view", "failed");
-            state = State.failed;
+
+            getCurrentView().set(path, null, ViewMode.auto, State.failed);
             updateView();
         }
     }

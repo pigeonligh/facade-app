@@ -9,9 +9,8 @@ import com.pigeonligh.facade.data.types.DataFavoriteItem;
 
 public class FavoriteListItem extends DataFavoriteItem.Viewer {
     public FavoriteListItem(DataFavoriteItem item, Object content) {
-        super(item, R.layout.component_source_list_item, content);
+        super(item, R.layout.component_favorite_list_item, content);
     }
-
 
     @Override
     protected FavoriteListItem.ViewHolder setupViewHolder(View view) {

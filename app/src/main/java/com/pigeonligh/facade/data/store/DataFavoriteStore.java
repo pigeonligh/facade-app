@@ -36,4 +36,14 @@ public class DataFavoriteStore {
     public DataNamedList getList() {
         return list;
     }
+
+    public int findFavorite(String src, String path) {
+        for (int i = 0; i < list.size(); i++) {
+            DataFavoriteItem item = list.get(i);
+            if (item.getSource().equals(src) && item.getPath().equals(path)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

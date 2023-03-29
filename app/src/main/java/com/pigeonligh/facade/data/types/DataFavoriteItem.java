@@ -9,17 +9,19 @@ import org.json.JSONObject;
 
 public class DataFavoriteItem extends DataNamedItem {
     private String name;
-    private String sourceName;
+    private String source;
     private String path;
 
-    public DataFavoriteItem() {
-        //
+    public DataFavoriteItem(String name, String source, String path) {
+        this.name = name;
+        this.source = source;
+        this.path = path;
     }
 
     public DataFavoriteItem(JSONObject obj) {
         try {
             name = obj.getString("name");
-            sourceName = obj.getString("source");
+            source = obj.getString("source");
             path = obj.getString("path");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -30,8 +32,8 @@ public class DataFavoriteItem extends DataNamedItem {
         return name;
     }
 
-    public String getSourceName() {
-        return sourceName;
+    public String getSource() {
+        return source;
     }
 
     public String getPath() {
@@ -42,7 +44,7 @@ public class DataFavoriteItem extends DataNamedItem {
         JSONObject obj = new JSONObject();
         try {
             obj.put("name", name);
-            obj.put("source", sourceName);
+            obj.put("source", source);
             obj.put("path", path);
         } catch (JSONException e) {
             e.printStackTrace();

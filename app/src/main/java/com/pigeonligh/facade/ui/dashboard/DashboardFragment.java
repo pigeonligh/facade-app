@@ -45,11 +45,12 @@ public class DashboardFragment extends Fragment {
                     if (i != -1) {
                         dashboardViewModel.getSourceList().pick(i);
                         dashboardViewModel.saveData();
-                        dashboardViewModel.getAdapter().notifyDataSetChanged();
                     }
                 } else {
                     Log.e("dashboard", "no result");
                 }
+
+                dashboardViewModel.getAdapter().notifyDataSetChanged();
             }
         });
     }
