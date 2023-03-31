@@ -1,45 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.Theme.Facade.ContainerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.source.EditSourceFragment">
 
     <TableLayout
+        style="@style/Widget.Theme.Facade.ContainerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:stretchColumns="1">
 
         <TableRow
+            style="@style/Widget.Theme.Facade.ContainerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
 
             <TextView
                 android:id="@+id/textViewName"
+                style="@style/Widget.Theme.Facade.ContentView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Name" />
 
             <EditText
                 android:id="@+id/editTextName"
+                style="@style/Widget.Theme.Facade.ContentView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="" />
         </TableRow>
 
         <TableRow
+            style="@style/Widget.Theme.Facade.ContainerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/textViewURL"
+                style="@style/Widget.Theme.Facade.ContentView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="URL" />
 
             <EditText
                 android:id="@+id/editTextURL"
+                style="@style/Widget.Theme.Facade.ContentView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="" />

@@ -323,8 +323,17 @@ public class ViewActivity extends AppCompatActivity {
         private ViewMode mode = ViewMode.auto;
         private State state = State.loading;
         private String path;
+        private int scalePos = 0;
 
         ViewState() {
+        }
+
+        public int getScalePos() {
+            return scalePos;
+        }
+
+        public void setScalePos(int scalePos) {
+            this.scalePos = scalePos;
         }
 
         public void set(String path, ResponseView data, ViewMode mode, State state) {

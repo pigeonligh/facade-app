@@ -1,6 +1,10 @@
 <resources>
 
-    <style name="Widget.Theme.Facade.MyView" parent="">
-        <item name="android:background">@color/gray_400</item>
+    <style name="Widget.Theme.Facade.ContainerView" parent="">
+        <item name="android:background">@color/white</item>
+    </style>
+
+    <style name="Widget.Theme.Facade.ContentView" parent="">
+        <item name="android:textColor">@color/black</item>
     </style>
 </resources>

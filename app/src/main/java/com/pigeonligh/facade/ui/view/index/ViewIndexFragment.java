@@ -2,12 +2,14 @@ package com.pigeonligh.facade.ui.view.index;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.pigeonligh.facade.Activities.ViewActivity;
@@ -27,6 +29,7 @@ public class ViewIndexFragment extends Fragment {
     private BaseList list;
     private FragmentViewIndexBinding binding;
     private DataRefAdapter dataList;
+    private NestedScrollView scrollView;
 
     private ViewActivity parentActivity;
 
@@ -47,6 +50,7 @@ public class ViewIndexFragment extends Fragment {
         binding = FragmentViewIndexBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
+        scrollView = root.findViewById(R.id.view_index_scroll_view);
         showContentView = root.findViewById(R.id.view_index_show_content);
         descriptionView = root.findViewById(R.id.view_index_description);
         list = root.findViewById(R.id.view_index_children);
@@ -72,14 +76,21 @@ public class ViewIndexFragment extends Fragment {
             }
         });
 
+        scrollView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View view, int x, int y, int ox, int oy) {
+                parentActivity.getCurrentView().setScalePos(y);
+            }
+        });
+
         return root;
     }
 
 
     @Override
     public void onResume() {
-        ViewActivity.ViewState viewState = parentActivity.getCurrentView();
-        ResponseView data = new ResponseView(viewState.getData());
+        ViewActivity.ViewState current = parentActivity.getCurrentView();
+        ResponseView data = new ResponseView(current.getData());
 
         if (data.description.isEmpty()) {
             data.description = data.content.content;
@@ -111,6 +122,14 @@ public class ViewIndexFragment extends Fragment {
         ViewGroup.LayoutParams params = list.getLayoutParams();
         params.height = totalHeight + (list.getDividerHeight() * (dataList.getCount() - 1));
         list.setLayoutParams(params);
+
+        Log.d(TAG, String.format("scale to %d", current.getScalePos()));
+        scrollView.post(new Runnable() {
+            @Override
+            public void run() {
+                scrollView.scrollTo(0, current.getScalePos());
+            }
+        });
 
         super.onResume();
     }
